@@ -1,6 +1,7 @@
 __pycache__/
 .venv/
 .vscode/
+migrations/
 *.pyc
 *.log
 env
