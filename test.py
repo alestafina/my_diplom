@@ -21,7 +21,7 @@ def auth():
     print(req)
     return _cookies
 
-
+# формируем объект с расписанием преподавателя
 def make_teacher_schedule(data):
     result = {"name": data[0]["TEACHER_FIO"], "days": []}
     date = datetime.datetime.today()
@@ -34,13 +34,13 @@ def make_teacher_schedule(data):
     
     # 12 дней (2 недели без воскресений)
     for i in range(1, 13):
-        lessons = {f"lesson {j}": False for j in range(1, 8)}
+        lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
         
         for item in data:
             date_in_tt = item["DAY_DATE"].split("T")[0]
             if date_str == date_in_tt:
-                lessons[f"lesson {item['POSITION']}"] = True  # Устанавливаем 1 для найденного урока
+                lessons[f"lesson {item['POSITION']}"] = 0  # Устанавливаем 1 для найденного урока
                 
         result["days"].append({"date": date_str, f"day {i}": lessons})
         
@@ -52,9 +52,9 @@ def make_teacher_schedule(data):
     
     return result
 
-
+# формируем объект с расписанием студента
 def make_student_schedule(data):
-    result  = {"name": "default", "days": []}
+    result  = {"name": data[0]['STUDY_GROUP'], "days": []}
     weeks = [] 
 
     # получаем номер текущей недели
@@ -75,7 +75,7 @@ def make_student_schedule(data):
         date += datetime.timedelta(days=1)
     
     for i in range(1, 13):
-        lessons = {f"lesson {j}": False for j in range(1, 8)}
+        lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
         day_week = date.weekday() + 1
 
@@ -85,13 +85,13 @@ def make_student_schedule(data):
             if item['DAY_NUMBER'] == day_week:
                 if item['WEEK'] == None:
                     if item['FREQUENCY'] == 1 and cur_week_num % 2 == 0: # четная неделя
-                        lessons[f"lesson {item['POSITION']}"] = True  
+                        lessons[f"lesson {item['POSITION']}"] = 0  
                     elif item['FREQUENCY'] == 2 and cur_week_num % 2 != 0: # нечетная неделя
-                        lessons[f"lesson {item['POSITION']}"] = True 
+                        lessons[f"lesson {item['POSITION']}"] = 0 
                     elif item['FREQUENCY'] == 3: # любая неделя
-                        lessons[f"lesson {item['POSITION']}"] = True
+                        lessons[f"lesson {item['POSITION']}"] = 0
                 elif cur_week_num in weeks: # FREQUENCY=7, особые номера недель
-                    lessons[f"lesson {item['POSITION']}"] = True  
+                    lessons[f"lesson {item['POSITION']}"] = 0  
 
         result["days"].append({"date": date_str, f"day {i}": lessons})
         
@@ -104,23 +104,42 @@ def make_student_schedule(data):
           
     return result
 
+# ДА ВОЗМОЖНО ЭТО ГРОМОЗДКО И КАЖЕТСЯ ЧТО У МЕНЯ ОЧЕНЬ ТУПАЯ СТРУКТУРА В ЛОБ
+# но я ничего другого не придумала
+# функция поиска свободных окон
+def search_free(schedule):
+    free_time = schedule[0]
+    free_time.pop("name")
 
+    for i in range(len(schedule)):
+        for day in range(1, 13):
+            for j in range(1, 8):
+                free_time["days"][day - 1][f"day {day}"][f"lesson {j}"] *= schedule[i]["days"][day - 1][f"day {day}"][f"lesson {j}"]
+       
+    return free_time
 
 cookies = auth()
+schedule = []
 
 teacher_id = 827
 student_id = 68719
 
-# url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
+url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
 url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{student_id}'
 
-# req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
-# response = req.json()
+req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
+response = req.json()
+
+res = make_teacher_schedule(response)
+schedule.append(res)
 
 req = requests.get(url_get_student, cookies=cookies, headers=headers)
 response = req.json()
 
 res = make_student_schedule(response)
+schedule.append(res)
 
-with open("try.json", "w") as out:
-    json.dump(res, out, indent=4, ensure_ascii=False)
+free = search_free(schedule)
+
+with open("free.json", "w") as out:
+    json.dump(free, out, indent=4, ensure_ascii=False)

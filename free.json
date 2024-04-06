@@ -1,0 +1,148 @@
+{
+    "days": [
+        {
+            "date": "2024-04-08",
+            "day 1": {
+                "lesson 1": 0,
+                "lesson 2": 0,
+                "lesson 3": 0,
+                "lesson 4": 0,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-09",
+            "day 2": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 1,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-10",
+            "day 3": {
+                "lesson 1": 1,
+                "lesson 2": 0,
+                "lesson 3": 0,
+                "lesson 4": 0,
+                "lesson 5": 0,
+                "lesson 6": 0,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-11",
+            "day 4": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 1,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-12",
+            "day 5": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 1,
+                "lesson 4": 0,
+                "lesson 5": 0,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-13",
+            "day 6": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 1,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-15",
+            "day 7": {
+                "lesson 1": 0,
+                "lesson 2": 0,
+                "lesson 3": 1,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-16",
+            "day 8": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 1,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-17",
+            "day 9": {
+                "lesson 1": 1,
+                "lesson 2": 0,
+                "lesson 3": 0,
+                "lesson 4": 0,
+                "lesson 5": 0,
+                "lesson 6": 0,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-18",
+            "day 10": {
+                "lesson 1": 0,
+                "lesson 2": 0,
+                "lesson 3": 0,
+                "lesson 4": 1,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-19",
+            "day 11": {
+                "lesson 1": 1,
+                "lesson 2": 1,
+                "lesson 3": 0,
+                "lesson 4": 0,
+                "lesson 5": 1,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        },
+        {
+            "date": "2024-04-20",
+            "day 12": {
+                "lesson 1": 1,
+                "lesson 2": 0,
+                "lesson 3": 0,
+                "lesson 4": 0,
+                "lesson 5": 0,
+                "lesson 6": 1,
+                "lesson 7": 1
+            }
+        }
+    ]
+}
