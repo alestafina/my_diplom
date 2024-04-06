@@ -1,4 +1,6 @@
 import requests
+import json
+import datetime
 
 login = 'mustafina.2020@stud.nstu.ru'
 password = 'Astro24105804'
@@ -13,15 +15,112 @@ headers = {
             'X-Apikey' : apikey
         }
 
-req = requests.get(url_auth, headers=headers)
-cookies = req.cookies
-print(req)
+def auth():
+    req = requests.get(url_auth, headers=headers)
+    _cookies = req.cookies
+    print(req)
+    return _cookies
 
-url_get_teacher = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/827'
-url_get_student = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/36535'
-url_get_room = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_room_schedule/475'
 
-req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
+def make_teacher_schedule(data):
+    result = {"name": data[0]["TEACHER_FIO"], "days": []}
+    date = datetime.datetime.today()
+    
+    # Если сегодня суббота, пропускаем воскресенье
+    if date.weekday() == 5:
+        date += datetime.timedelta(days=2)
+    else:
+        date += datetime.timedelta(days=1)
+    
+    # 12 дней (2 недели без воскресений)
+    for i in range(1, 13):
+        lessons = {f"lesson {j}": False for j in range(1, 8)}
+        date_str = date.isoformat().split("T")[0]
+        
+        for item in data:
+            date_in_tt = item["DAY_DATE"].split("T")[0]
+            if date_str == date_in_tt:
+                lessons[f"lesson {item['POSITION']}"] = True  # Устанавливаем 1 для найденного урока
+                
+        result["days"].append({"date": date_str, f"day {i}": lessons})
+        
+        # Если суббота, пропускаем воскресенье
+        if date.weekday() == 5:
+            date += datetime.timedelta(days=2)
+        else:
+            date += datetime.timedelta(days=1)
+    
+    return result
+
+
+def make_student_schedule(data):
+    result  = {"name": "default", "days": []}
+    weeks = [] 
+
+    # получаем номер текущей недели
+    week_api = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_week_number'
+
+    req = requests.get(week_api, cookies=cookies, headers=headers)
+    response = req.json()
+
+    cur_week_num = response[0]["WEEK"]
+
+    date = datetime.datetime.today()
+    
+    # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
+    if date.weekday() == 5:
+        date += datetime.timedelta(days=2)
+        cur_week_num += 1
+    else:
+        date += datetime.timedelta(days=1)
+    
+    for i in range(1, 13):
+        lessons = {f"lesson {j}": False for j in range(1, 8)}
+        date_str = date.isoformat().split("T")[0]
+        day_week = date.weekday() + 1
+
+        for item in data:
+            if item['WEEK'] != None:
+                weeks = [int(num) for num in item['WEEK'].split(",")]
+            if item['DAY_NUMBER'] == day_week:
+                if item['WEEK'] == None:
+                    if item['FREQUENCY'] == 1 and cur_week_num % 2 == 0: # четная неделя
+                        lessons[f"lesson {item['POSITION']}"] = True  
+                    elif item['FREQUENCY'] == 2 and cur_week_num % 2 != 0: # нечетная неделя
+                        lessons[f"lesson {item['POSITION']}"] = True 
+                    elif item['FREQUENCY'] == 3: # любая неделя
+                        lessons[f"lesson {item['POSITION']}"] = True
+                elif cur_week_num in weeks: # FREQUENCY=7, особые номера недель
+                    lessons[f"lesson {item['POSITION']}"] = True  
+
+        result["days"].append({"date": date_str, f"day {i}": lessons})
+        
+        # Если суббота, пропускаем воскресенье, меняем номер текущей недели
+        if date.weekday() == 5:
+            date += datetime.timedelta(days=2)
+            cur_week_num += 1
+        else:
+            date += datetime.timedelta(days=1)
+          
+    return result
+
+
+
+cookies = auth()
+
+teacher_id = 827
+student_id = 68719
+
+# url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
+url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{student_id}'
+
+# req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
+# response = req.json()
+
+req = requests.get(url_get_student, cookies=cookies, headers=headers)
 response = req.json()
 
-print(response[1]['DISCIPLINE_NAME'])
+res = make_student_schedule(response)
+
+with open("try.json", "w") as out:
+    json.dump(res, out, indent=4, ensure_ascii=False)

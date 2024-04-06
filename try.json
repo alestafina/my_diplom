@@ -1,0 +1,149 @@
+{
+    "name": "default",
+    "days": [
+        {
+            "date": "2024-04-08",
+            "day 1": {
+                "lesson 1": true,
+                "lesson 2": true,
+                "lesson 3": true,
+                "lesson 4": true,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-09",
+            "day 2": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-10",
+            "day 3": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": true,
+                "lesson 6": true,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-11",
+            "day 4": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-12",
+            "day 5": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": true,
+                "lesson 5": true,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-13",
+            "day 6": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-15",
+            "day 7": {
+                "lesson 1": true,
+                "lesson 2": true,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-16",
+            "day 8": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-17",
+            "day 9": {
+                "lesson 1": false,
+                "lesson 2": true,
+                "lesson 3": true,
+                "lesson 4": false,
+                "lesson 5": true,
+                "lesson 6": true,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-18",
+            "day 10": {
+                "lesson 1": true,
+                "lesson 2": true,
+                "lesson 3": true,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-19",
+            "day 11": {
+                "lesson 1": false,
+                "lesson 2": false,
+                "lesson 3": false,
+                "lesson 4": false,
+                "lesson 5": false,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        },
+        {
+            "date": "2024-04-20",
+            "day 12": {
+                "lesson 1": false,
+                "lesson 2": true,
+                "lesson 3": true,
+                "lesson 4": true,
+                "lesson 5": true,
+                "lesson 6": false,
+                "lesson 7": false
+            }
+        }
+    ]
+}
