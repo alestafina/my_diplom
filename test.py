@@ -22,10 +22,15 @@ def auth():
     return _cookies
 
 # формируем объект с расписанием преподавателя
-def make_teacher_schedule(data):
+def make_teacher_schedule(teacher_id):
+    # получаем расписание преподавателя
+    url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
+    req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
+    data = req.json()
+    # формируем формат для будущего поиска
     result = {"name": data[0]["TEACHER_FIO"], "days": []}
     date = datetime.datetime.today()
-        # Если сегодня суббота, пропускаем воскресенье
+    # Если сегодня суббота, пропускаем воскресенье
     if date.weekday() == 5:
         date += datetime.timedelta(days=2)
     else:
@@ -48,6 +53,11 @@ def make_teacher_schedule(data):
 
 # формируем объект с расписанием студента
 def make_student_schedule(data):
+    # получаем расписание студента
+    url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{student_id}'
+    req = requests.get(url_get_student, cookies=cookies, headers=headers)
+    data = req.json()
+    # формируем формат для поиска 
     result  = {"name": data[0]['STUDY_GROUP'], "days": []}
     weeks = [] 
     # получаем номер текущей недели
@@ -108,19 +118,9 @@ schedule = []
 teacher_id = 827
 student_id = 68719
 
-url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
-url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{student_id}'
-
-req = requests.get(url_get_teacher, cookies=cookies, headers=headers)
-response = req.json()
-
-res = make_teacher_schedule(response)
+res = make_teacher_schedule(teacher_id)
 schedule.append(res)
-
-req = requests.get(url_get_student, cookies=cookies, headers=headers)
-response = req.json()
-
-res = make_student_schedule(response)
+res = make_student_schedule(student_id)
 schedule.append(res)
 
 free = search_free(schedule)
