@@ -1,8 +1,8 @@
-from Meeting import db
+from Meeting import db, manager
 from flask_login import UserMixin
 from datetime import datetime
 
-class User(db.Model, UserMixin):
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     corp_email = db.Column(db.String(128), unique=True)
@@ -20,9 +20,9 @@ class Departments(db.Model):
     faculty = db.relationship('Faculties', backref=db.backref('departments', lazy=True))
 
 class Teachers(db.Model):
-    teacher_id =  db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    teacher_id =  db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     department_id =  db.Column(db.Integer, db.ForeignKey('departments.department_id'))
-    user = db.relationship('User', backref=db.backref('teachers', uselist=False, lazy=True))
+    user = db.relationship('Users', backref=db.backref('teachers', uselist=False, lazy=True))
     department = db.relationship('Departments', backref=db.backref('teachers', lazy=True))
 
 class Students_groups(db.Model):
@@ -32,9 +32,9 @@ class Students_groups(db.Model):
     faculty = db.relationship('Faculties', backref=db.backref('students_groups', lazy=True))
 
 class Students(db.Model):
-    student_id =  db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    student_id =  db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('students_groups.group_id'))
-    user = db.relationship('User', backref=db.backref('students', uselist=False, lazy=True))
+    user = db.relationship('Users', backref=db.backref('students', uselist=False, lazy=True))
     student_group = db.relationship('Students_groups', backref=db.backref('students', lazy=True))
 
 class Meeting(db.Model):
@@ -59,14 +59,17 @@ class Comand(db.Model):
 class Comand_members(db.Model):
     member_id = db.Column(db.Integer, primary_key=True) 
     command_id = db.Column(db.Integer, db.ForeignKey('comand.comand_id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     command = db.relationship('Comand', backref=db.backref('comand_members', lazy=True))
-    user = db.relationship('User', backref=db.backref('comand_members', lazy=True))
+    user = db.relationship('Users', backref=db.backref('comand_members', lazy=True))
 
 class Meeting_members(db.Model):
     member_id = db.Column(db.Integer, primary_key=True)
     meeting_id = db.Column(db.Integer, db.ForeignKey('meeting.meeting_id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     meeting = db.relationship('Meeting', backref=db.backref('meeting_members', lazy=True))
-    user = db.relationship('User', backref=db.backref('meeting_members', lazy=True))
+    user = db.relationship('Users', backref=db.backref('meeting_members', lazy=True))
 
+@manager.user_loader
+def load_user(user_id):
+    return Users.query.get(user_id)

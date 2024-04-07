@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>"title"</title>
-    </head>    
+        {% block head %}{% endblock%}
+        <meta charset="UTF-8">
+        <title>{% block title %}{% endblock %}</title>
+    </head>
+
     <body>
-        <p>"Ntrcn"</p>
+        <nav></nav>
+        {% block body %}{% endblock %}
     </body>
 </html>

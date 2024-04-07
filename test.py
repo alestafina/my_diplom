@@ -25,60 +25,47 @@ def auth():
 def make_teacher_schedule(data):
     result = {"name": data[0]["TEACHER_FIO"], "days": []}
     date = datetime.datetime.today()
-    
-    # Если сегодня суббота, пропускаем воскресенье
+        # Если сегодня суббота, пропускаем воскресенье
     if date.weekday() == 5:
         date += datetime.timedelta(days=2)
     else:
         date += datetime.timedelta(days=1)
-    
     # 12 дней (2 недели без воскресений)
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
-        
         for item in data:
             date_in_tt = item["DAY_DATE"].split("T")[0]
             if date_str == date_in_tt:
                 lessons[f"lesson {item['POSITION']}"] = 0  # Устанавливаем 1 для найденного урока
-                
         result["days"].append({"date": date_str, f"day {i}": lessons})
-        
         # Если суббота, пропускаем воскресенье
         if date.weekday() == 5:
             date += datetime.timedelta(days=2)
         else:
             date += datetime.timedelta(days=1)
-    
     return result
 
 # формируем объект с расписанием студента
 def make_student_schedule(data):
     result  = {"name": data[0]['STUDY_GROUP'], "days": []}
     weeks = [] 
-
     # получаем номер текущей недели
     week_api = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_week_number'
-
     req = requests.get(week_api, cookies=cookies, headers=headers)
     response = req.json()
-
     cur_week_num = response[0]["WEEK"]
-
     date = datetime.datetime.today()
-    
     # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
     if date.weekday() == 5:
         date += datetime.timedelta(days=2)
         cur_week_num += 1
     else:
-        date += datetime.timedelta(days=1)
-    
+        date += datetime.timedelta(days=1)    
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
         day_week = date.weekday() + 1
-
         for item in data:
             if item['WEEK'] != None:
                 weeks = [int(num) for num in item['WEEK'].split(",")]
@@ -92,16 +79,13 @@ def make_student_schedule(data):
                         lessons[f"lesson {item['POSITION']}"] = 0
                 elif cur_week_num in weeks: # FREQUENCY=7, особые номера недель
                     lessons[f"lesson {item['POSITION']}"] = 0  
-
-        result["days"].append({"date": date_str, f"day {i}": lessons})
-        
+        result["days"].append({"date": date_str, f"day {i}": lessons})     
         # Если суббота, пропускаем воскресенье, меняем номер текущей недели
         if date.weekday() == 5:
             date += datetime.timedelta(days=2)
             cur_week_num += 1
         else:
             date += datetime.timedelta(days=1)
-          
     return result
 
 # ДА ВОЗМОЖНО ЭТО ГРОМОЗДКО И КАЖЕТСЯ ЧТО У МЕНЯ ОЧЕНЬ ТУПАЯ СТРУКТУРА В ЛОБ
