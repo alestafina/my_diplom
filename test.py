@@ -21,6 +21,9 @@ def auth():
     print(req)
     return _cookies
 
+
+
+
 # формируем объект с расписанием преподавателя
 def make_teacher_schedule(teacher_id):
     # получаем расписание преподавателя
@@ -52,7 +55,7 @@ def make_teacher_schedule(teacher_id):
     return result
 
 # формируем объект с расписанием студента
-def make_student_schedule(data):
+def make_student_schedule(student_id):
     # получаем расписание студента
     url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{student_id}'
     req = requests.get(url_get_student, cookies=cookies, headers=headers)
@@ -104,18 +107,19 @@ def make_student_schedule(data):
 def search_free(schedule):
     free_time = schedule[0]
     free_time.pop("name")
-
+    # Для каждого человека
     for i in range(len(schedule)):
+        # Для каждого дня
         for day in range(1, 13):
+            # Для каждой пары
             for j in range(1, 8):
                 free_time["days"][day - 1][f"day {day}"][f"lesson {j}"] *= schedule[i]["days"][day - 1][f"day {day}"][f"lesson {j}"]
-       
     return free_time
 
 cookies = auth()
 schedule = []
 
-teacher_id = 827
+teacher_id = 21874
 student_id = 68719
 
 res = make_teacher_schedule(teacher_id)

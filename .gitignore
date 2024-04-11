@@ -6,3 +6,8 @@ migrations/
 *.log
 env
 .env
+node_modules/
+/build/
+
+# напишем практику 1 и сядем разбираться, пока все на фласке идем
+frontend/

@@ -1,0 +1,47 @@
+{% extends "index.html" %}
+
+{% block title %}
+Создание встречи
+{% endblock %}
+
+{% block body %}
+<h1>Создание встречи</h1>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST" >
+    <div id="fields">
+        <div class="input-row">
+            <input type="text" name="name" placeholder="ФИО"> 
+            <input type="text" name="group" placeholder="Группа"> 
+            <span>или</span>
+            <input type="text" name="department" placeholder="Кафедра"> 
+        </div>
+    </div>
+    <br />
+    <button type="button" onclick="addFields()">Добавить поле</button>
+    <br />
+    <br />
+    <input type="submit" value="Отправить">
+</form>
+
+<script>
+function addFields() {
+    var fieldsDiv = document.getElementById("fields");
+    var newFields = document.createElement("div");
+    newFields.className = "input-row";
+    newFields.innerHTML = '<br />' + '<input type="text" name="name" placeholder="ФИО"> ' + 
+                          '<input type="text" name="group" placeholder="Группа"> ' + 
+                          '<span>или</span> ' + 
+                          '<input type="text" name="department" placeholder="Кафедра"> ' + '<br />';
+    fieldsDiv.appendChild(newFields);
+}
+</script>
+
+{% endblock %}

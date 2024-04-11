@@ -1,0 +1,26 @@
+{% extends "index.html" %}
+
+{% block title %}
+Вход НГТУ
+{% endblock %}
+
+{% block body %}
+<h1>Войти через личный кабинет НГТУ</h1>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST">
+        <input type="text" name="email" placeholder="Корпоративная почта"><br />
+        <br />
+        <input type="password" name="password" placeholder="Пароль"> <br />
+        <br />
+        <input type="submit" value="Войти">
+</form>
+
+{% endblock %}
