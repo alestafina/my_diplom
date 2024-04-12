@@ -1,0 +1,48 @@
+{% extends "index.html" %}
+
+{% block head %}
+<style>
+    table {
+        border-collapse: collapse;
+        width: auto;
+    }
+    th, td {
+        border: 1px solid #dddddd;
+        text-align: center;
+        padding: 15px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+</style>
+{% endblock%}
+
+{% block title %}
+Свободное время
+{% endblock %}
+
+{% block body %}
+
+<h1>Свободное время для встречи</h1>
+<table>
+    <tr>
+        <th style="width: fit-content;"></th>
+        {% for k in range(0, 12) %}
+            <th style="width: fit-content;">{{ d_of_week[k] }}<br />{{ d_m_date[k] }}</th>
+        {% endfor %}
+    </tr>
+    {% for i in range(1, 8) %}
+        <tr>
+            <td style="width: fit-content;">{{ time_for_lsns[i - 1] }}</td>
+            {% for j in range(1, 13) %}
+                {% if schedule['days'][j - 1]['day ' ~ j]['lesson ' ~ i] == 1 %}
+                    <td style="background-color: rgb(72, 199, 72); width: fit-content;"></td>
+                {% else %}
+                    <td style="background-color: rgb(245, 98, 98); width: fit-content;"></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

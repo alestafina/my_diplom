@@ -2,6 +2,8 @@ from flask import render_template, redirect, url_for, request, flash, session, c
 from flask_login import login_user, login_required, logout_user
 import requests
 import json
+import datetime as dt
+import locale
 
 from Meeting import app, db
 from Meeting.models import *
@@ -9,7 +11,7 @@ from Meeting.models import *
 def add_user(Users, role):
     session['id'] = Users.id
     session['name'] = Users.name
-    session['email'] = Users.email
+    session['email'] = Users.corp_email
     session['role'] = role
     return session
 
@@ -57,9 +59,17 @@ def user_to_db(headers):
     finally:
         return new_user
 
-def get_teacher_id(_fio, _department):
-    t_id = 0
+def make_my_schedule():
+    schedule = {}
+    if session.get('role') == 'Student':
+        student = Students.query.filter_by(student_id=session.get('id')).first()
+        group_id = student.group_id
+        schedule = make_student_schedule(group_id)
+    else:
+        schedule = make_teacher_schedule(session.get('id'))
+    return schedule
 
+def get_teacher_id(_fio, _department):
     t_id_query = db.session.query(
     Teachers.teacher_id).join(
     Departments, Teachers.department_id == Departments.department_id).join(
@@ -93,11 +103,9 @@ def get_teacher_id(_fio, _department):
         t_in_t = Teachers(teacher_id=t_id, department_id=dep_id)
         db.session.add(t_in_t)
         db.session.commit()
-    # print(json.dumps(data, indent=4, ensure_ascii=False))
     return t_id
 
 def get_group_id(group):
-    g_id = 0
     student_group = Students_groups.query.filter_by(name=group).first()
     if student_group == None:
         url_get_groups = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/groups'
@@ -128,12 +136,12 @@ def make_teacher_schedule(teacher_id):
     data = req.json()
     # формируем формат для будущего поиска
     result = {"name": data[0]["TEACHER_FIO"], "days": []}
-    date = datetime.datetime.today()
+    date = dt.datetime.today()
     # Если сегодня суббота, пропускаем воскресенье
     if date.weekday() == 5:
-        date += datetime.timedelta(days=2)
+        date += dt.timedelta(days=2)
     else:
-        date += datetime.timedelta(days=1)
+        date += dt.timedelta(days=1)
     # 12 дней (2 недели без воскресений)
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
@@ -145,9 +153,9 @@ def make_teacher_schedule(teacher_id):
         result["days"].append({"date": date_str, f"day {i}": lessons})
         # Если суббота, пропускаем воскресенье
         if date.weekday() == 5:
-            date += datetime.timedelta(days=2)
+            date += dt.timedelta(days=2)
         else:
-            date += datetime.timedelta(days=1)
+            date += dt.timedelta(days=1)
     return result
 
 def make_student_schedule(group_id):
@@ -167,13 +175,13 @@ def make_student_schedule(group_id):
     req = requests.get(week_api, cookies=session.get('cookies'), headers=headers)
     response = req.json()
     cur_week_num = response[0]["WEEK"]
-    date = datetime.datetime.today()
+    date = dt.datetime.today()
     # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
     if date.weekday() == 5:
-        date += datetime.timedelta(days=2)
+        date += dt.timedelta(days=2)
         cur_week_num += 1
     else:
-        date += datetime.timedelta(days=1)    
+        date += dt.timedelta(days=1)    
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
@@ -194,31 +202,63 @@ def make_student_schedule(group_id):
         result["days"].append({"date": date_str, f"day {i}": lessons})     
         # Если суббота, пропускаем воскресенье, меняем номер текущей недели
         if date.weekday() == 5:
-            date += datetime.timedelta(days=2)
+            date += dt.timedelta(days=2)
             cur_week_num += 1
         else:
-            date += datetime.timedelta(days=1)
+            date += dt.timedelta(days=1)
     return result
+
+def search_free(schedule):
+    free_time = schedule[0]
+    free_time.pop("name")
+    # Для каждого человека
+    for i in range(len(schedule)):
+        # Для каждого дня
+        for day in range(1, 13):
+            # Для каждой пары
+            for j in range(1, 8):
+                free_time["days"][day - 1][f"day {day}"][f"lesson {j}"] *= schedule[i]["days"][day - 1][f"day {day}"][f"lesson {j}"]
+    return free_time
+
+def format_data(data):
+    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+    d_m_dates = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%d.%m') for day in data['days']]
+    d_of_week = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%a') for day in data['days']]
+    time_for_lessons = ["08:30 - 10:00", "10:15 - 11:45", "12:00 - 13:30", "14:00 - 15:30", "15:45 - 17:15", "17:30 - 19:00", "19:15 - 20:45"]
+    return d_m_dates, d_of_week, time_for_lessons
 
 
 @app.route("/new_meeting", methods=['GET', 'POST'])
+@login_required
 def new_meeting():
-    if request.method == 'POST':
-        fios = request.form.getlist('name')
-        groups = request.form.getlist('group')
-        departments = request.form.getlist('department')
-        
-        for fio, group, department in zip(fios, groups, departments):
-            if group:
-                group_id = get_group_id(group)
-                print(group_id)
-                # make_student_schedule(group_id)
-            elif department:
-                teacher_id = get_teacher_id(fio, department)
-                print(teacher_id)
-            else:
-                flash('Wrong')      
-        return "Данные успешно получены!"
+    try:
+        if request.method == 'POST':
+            fios = request.form.getlist('name')
+            groups = request.form.getlist('group')
+            departments = request.form.getlist('department')
+            full_schedule = []
+            for fio, group, department in zip(fios, groups, departments):
+                if fio != '': 
+                    if group != '':
+                        group_id = get_group_id(group)
+                        st_scheedule = make_student_schedule(group_id)
+                        full_schedule.append(st_scheedule)
+                    elif department != '':
+                        teacher_id = get_teacher_id(fio, department)
+                        t_schedule = make_teacher_schedule(teacher_id)
+                        full_schedule.append(t_schedule)
+                    else:
+                        flash('Введите либо кафедру, либо группу!')
+                else:
+                    flash('Введите значения!')
+            if full_schedule != []:
+                full_schedule.append(make_my_schedule())
+                free = search_free(full_schedule)
+                d_m_date, d_of_week, time_for_lsns = format_data(free)
+                return render_template("choice.html", schedule=free, d_m_date=d_m_date, time_for_lsns=time_for_lsns, d_of_week=d_of_week)
+    except Exception as _ex:
+        print(_ex)
+        flash('Неверно введены данные!')
     return render_template('new_comand.html')
 
 @app.route("/")
@@ -246,6 +286,11 @@ def login_nstu():
                 if user == None:
                     user = user_to_db(headers)
                 login_user(user)
+                if Teachers.query.filter_by(teacher_id=user.id).first() != None:
+                    add_user(user, "Teacher")
+                else:
+                    add_user(user, "Student")
+                next_page = request.args.get('next')
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)

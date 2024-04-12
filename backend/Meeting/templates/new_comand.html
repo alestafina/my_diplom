@@ -9,9 +9,7 @@
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    {% for message in messages %}
-      {{ message }}
-    {% endfor %}
+      {{ messages[0] }}
   {% endif %}
 {% endwith %}
 
