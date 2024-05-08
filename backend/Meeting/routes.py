@@ -1,13 +1,15 @@
-from flask import render_template, redirect, url_for, request, flash, session, current_app
-from flask_login import login_user, login_required, logout_user
+from flask import render_template, redirect, url_for, request, flash, session
+from flask_login import login_user, login_required, logout_user, current_user
 import requests
 import json
 import datetime as dt
 import locale
+from flask import jsonify
 
-from Meeting import app, db
+from Meeting import app, db, manager
 from Meeting.models import *
 
+# добавляем нужную информацию о юзере в сессию
 def add_user(Users, role):
     session['id'] = Users.id
     session['name'] = Users.name
@@ -15,6 +17,7 @@ def add_user(Users, role):
     session['role'] = role
     return session
 
+# если юзера нет в бд, добавляем, выхватывая данные из ИС
 def user_to_db(headers):
     try:
         url_st_info = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_info'
@@ -24,15 +27,16 @@ def user_to_db(headers):
         username = information['SURNAME'] + ' ' + information['NAME'] + ' ' + information['PATRONYMIC']
         email = information['EMAIL']
         role = ""
+        # добавление в таблицу юзерс
+        new_user = Users(id = information['ID'], name=username, corp_email=email)
         if information['ROLE'] == 0: 
-            new_user = Users(id = information['ID'], name=username, corp_email=email)
             role = "Student"
         else:
-            new_user = Users(id = information['ID'], name=username, corp_email=email)
             role = "Teacher"
         db.session.add(new_user)
         db.session.commit()
         new_user = Users.query.filter_by(corp_email=email).first()
+        # добавление в таблицы преподов или студентов в зависимости от роли
         if role == "Student":
             group = Students_groups.query.filter_by(group_id=information['ID_GROUP']).first()
             if group == None:
@@ -44,6 +48,7 @@ def user_to_db(headers):
             db.session.add(student)
             db.session.commit()
         elif role == "Teacher":
+            # для преподавателя, чтоб узнат кафедру ищем его в ИС
             url_t_id = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/teachers'
             req_t = requests.get(url_t_id, headers=headers, cookies=session.get('cookies'))
             teachers = req_t.json()
@@ -59,6 +64,7 @@ def user_to_db(headers):
     finally:
         return new_user
 
+# создаем расписание для авторизированного пользователя
 def make_my_schedule():
     schedule = {}
     if session.get('role') == 'Student':
@@ -69,7 +75,9 @@ def make_my_schedule():
         schedule = make_teacher_schedule(session.get('id'))
     return schedule
 
+# получаем айди преподавателя из бд или ИС если такого нет
 def get_teacher_id(_fio, _department):
+    # большой запрос на поиск препода
     t_id_query = db.session.query(
     Teachers.teacher_id).join(
     Departments, Teachers.department_id == Departments.department_id).join(
@@ -77,6 +85,7 @@ def get_teacher_id(_fio, _department):
     Users.name == _fio, Departments.short_name == _department)
 
     t_id = t_id_query.scalar()
+    # не нашли препода - ищем в ИС и добавляем в бд
     if t_id == None:
         url_get_teachers = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/teachers'
         headers = {
@@ -105,8 +114,10 @@ def get_teacher_id(_fio, _department):
         db.session.commit()
     return t_id
 
+# ищем айди группы студента
 def get_group_id(group):
     student_group = Students_groups.query.filter_by(name=group).first()
+    # если не нашли в бд, ищем в ИС - добавляем в бд
     if student_group == None:
         url_get_groups = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/groups'
         headers = {
@@ -171,10 +182,7 @@ def make_student_schedule(group_id):
     result  = {"name": data[0]['STUDY_GROUP'], "days": []}
     weeks = [] 
     # получаем номер текущей недели
-    week_api = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_week_number'
-    req = requests.get(week_api, cookies=session.get('cookies'), headers=headers)
-    response = req.json()
-    cur_week_num = response[0]["WEEK"]
+    cur_week_num = week_now()
     date = dt.datetime.today()
     # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
     if date.weekday() == 5:
@@ -208,6 +216,17 @@ def make_student_schedule(group_id):
             date += dt.timedelta(days=1)
     return result
 
+def week_now():
+    headers = {
+        'Content-Type': 'application/json;charset=utf-8',
+        'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+    }
+    week_api = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_week_number'
+    req = requests.get(week_api, cookies=session.get('cookies'), headers=headers)
+    response = req.json()
+    return response[0]["WEEK"]
+
+# ищем свободные окна для всех
 def search_free(schedule):
     free_time = schedule[0]
     free_time.pop("name")
@@ -220,6 +239,7 @@ def search_free(schedule):
                 free_time["days"][day - 1][f"day {day}"][f"lesson {j}"] *= schedule[i]["days"][day - 1][f"day {day}"][f"lesson {j}"]
     return free_time
 
+# форматированные даты и часы пар для вывода в таблице
 def format_data(data):
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
     d_m_dates = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%d.%m') for day in data['days']]
@@ -228,6 +248,7 @@ def format_data(data):
     return d_m_dates, d_of_week, time_for_lessons
 
 
+# страница создания списка людей и вывод таблицы 
 @app.route("/new_meeting", methods=['GET', 'POST'])
 @login_required
 def new_meeting():
@@ -261,45 +282,66 @@ def new_meeting():
         flash('Неверно введены данные!')
     return render_template('new_comand.html')
 
-@app.route("/")
-@app.route("/index")
-def index():
-    return render_template("index.html")
+# БУДУЩАЯ главная страница
+@app.route("/main", methods=['GET', 'POST'])
+@login_required
+def main():
+    week_number = week_now()
+    return jsonify({'week' : week_number})
+    
 
+@manager.user_loader
+def load_user(user_id):
+    return Users.query.get(user_id)
+
+# Авторизация НГТУ
 @app.route("/login", methods=['GET', 'POST'])
 def login_nstu():
-    email = request.form.get('email')
-    password = request.form.get('password')
+    if request.method == 'POST':
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        if email and password:
+            url_auth = 'https://api.ciu.nstu.ru/v1.1/token/auth'
+            headers = {
+                'Content-Type': 'application/json;charset=utf-8',
+                'X-OpenAM-Username': email,
+                'X-OpenAM-Password': password
+            }
+            req = requests.get(url_auth, headers=headers)
+            session['cookies'] = dict(req.cookies)
+            try:
+                if req.status_code == 200 and req.json()['login']:
+                    user = Users.query.filter_by(corp_email=email).first()
+                    if user == None:
+                        user = user_to_db(headers)
+                    login_user(user)
+                    if Teachers.query.filter_by(teacher_id=user.id).first() != None:
+                        add_user(user, "Teacher")
+                    else:
+                        add_user(user, "Student")
+                print('auth ' + str(current_user.is_authenticated))
+                return jsonify({'massage': 'Классный пароль!'}), 200
+            except Exception as _ex:
+                return jsonify({'error': 'Неверно указаны почта или пароль!'}), 400
+        else: 
+            return jsonify({'error': 'Нет данных'}), 400
+    else:
+        return jsonify({'massage': 'страница логина'})
 
-    if email and password:
-        url_auth = 'https://api.ciu.nstu.ru/v1.1/token/auth'
-        headers = {
-            'Content-Type': 'application/json;charset=utf-8',
-            'X-OpenAM-Username': email,
-            'X-OpenAM-Password': password
-        }
-        req = requests.get(url_auth, headers=headers)
-        session['cookies'] = dict(req.cookies)
-        try:
-            if req.json()['login']:
-                user = Users.query.filter_by(corp_email=email).first()
-                if user == None:
-                    user = user_to_db(headers)
-                login_user(user)
-                if Teachers.query.filter_by(teacher_id=user.id).first() != None:
-                    add_user(user, "Teacher")
-                else:
-                    add_user(user, "Student")
-                next_page = request.args.get('next')
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            else:
-                return redirect(url_for('new_meeting'))
-        except Exception as _ex:
-            print(_ex)
-            flash('Неверно указаны почта или пароль!')
-        finally:
-            print('ok')
-    return render_template('login.html')
+@app.route('/checkAuth', methods=['GET'])
+def check_auth():
+    if current_user.is_authenticated:  # Проверяем, аутентифицирован ли текущий пользователь
+        print('yes!')
+        return jsonify({'isAuth': True}), 200
+    else:
+        print('no!')
+        return jsonify({'isAuth': False}), 200
 
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    session.pop('cookies', None)
+    logout_user()
+    return ({'massage': 'Успешный выход!'})

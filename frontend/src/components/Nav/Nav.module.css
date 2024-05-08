@@ -1,0 +1,61 @@
+.Nav {
+    display: flex;
+    flex-direction: row;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    box-shadow: 0 0px 15px rgba(0, 0, 0, 0.475);
+}
+
+.li a {
+    display: block;
+    color: rgb(251, 251, 251);
+    font-weight: 500;
+    text-align: center;
+    padding: 20px 20px;
+    text-decoration: none;
+    transition: background-color 0.25s;
+}
+
+.li a:hover {
+    background-color: #111;
+    color: #a7e6ff;
+}
+
+.li button {
+    background-color: #236abb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.li button:hover {
+    background-color: #005e83;
+    color: #99ecde;
+}
+
+.name {
+    color: rgb(0, 71, 202);
+    background-color: rgb(197, 228, 228);
+    height: 100%;
+    display: block;
+    text-align: center;
+    padding: 20px 20px;
+    font-weight: bold;
+}
+
+.p {
+    color:rgb(181, 222, 255);
+    font-size: 25px;
+    font-weight: 500;
+    margin: auto;
+    margin-right: 30px;
+    float: right;
+    margin-left: auto;
+    align-self: center;
+    padding: 2px;
+}

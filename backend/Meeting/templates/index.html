@@ -7,7 +7,14 @@
     </head>
 
     <body>
-        <nav>будущая шапка</nav>
-        {% block body %}{% endblock %}
+        <nav>Главная страница (будущее поле навигации)</nav>
+
+        <a href="{{ url_for('logout') }}"><button> Выход </button></a>
+
+        {% block body %}
+        
+        <a href="{{ url_for('new_meeting') }}"><button>Создать встречу</button></a>
+
+        {% endblock %}
     </body>
 </html>

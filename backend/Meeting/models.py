@@ -1,4 +1,4 @@
-from Meeting import db, manager
+from Meeting import db
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -70,6 +70,4 @@ class Meeting_members(db.Model):
     meeting = db.relationship('Meeting', backref=db.backref('meeting_members', lazy=True))
     user = db.relationship('Users', backref=db.backref('meeting_members', lazy=True))
 
-@manager.user_loader
-def load_user(user_id):
-    return Users.query.get(user_id)
+
