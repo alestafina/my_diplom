@@ -34,7 +34,7 @@ function Nav() {
   return ( <>
     <ul className={classes.Nav}>
       <li className={classes.li}>
-        <div className={classes.name} href="#">
+        <div className={classes.name}>
           MEETING
         </div>
       </li>

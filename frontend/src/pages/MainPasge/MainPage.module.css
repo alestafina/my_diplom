@@ -1,8 +1,21 @@
-.Button_create {
+.create {
     position: fixed;
-    /* Позиционируем относительно окна браузера */
-    bottom: 20px;
-    /* Отступ от нижнего края страницы */
-    right: 20px;
-    /* Отступ от правого края страницы */
+}
+
+.lk {
+    font-size: 2em;
+    font-weight: bold;
+    color: rgb(0, 49, 139);
+}
+
+.fio {
+    font-size: 1em;
+    font-weight: 500;
+    color: rgb(0, 49, 139);
+}
+
+.page {
+    margin-top: 50px;
+    margin-left: 50px;
+    margin-bottom: 10px;
 }

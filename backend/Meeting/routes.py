@@ -1,7 +1,6 @@
 from flask import render_template, redirect, url_for, request, flash, session
 from flask_login import login_user, login_required, logout_user, current_user
 import requests
-import json
 import datetime as dt
 import locale
 from flask import jsonify
@@ -239,14 +238,32 @@ def search_free(schedule):
                 free_time["days"][day - 1][f"day {day}"][f"lesson {j}"] *= schedule[i]["days"][day - 1][f"day {day}"][f"lesson {j}"]
     return free_time
 
+# добавляем команду в бд
+def add_team(data):
+    try:
+        team = Team.query.filter_by(title=data.get('title'), lead_user_id=session['id']).first()
+        if team:
+            return 0
+        else:
+            team = Team(title=data.get('title'), lead_user_id=session['id'])
+            db.session.add(team)
+            db.session.commit()
+            for fio in data.get('name'):
+                member = Users.query.filter_by(name=fio).first()
+                team_member = Team_members(team_id=team.team_id, user_id=member.id)
+                db.session.add(team_member)
+            db.session.commit()
+            return team.team_id
+    except Exception as _ex:
+        return _ex
+
 # форматированные даты и часы пар для вывода в таблице
 def format_data(data):
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-    d_m_dates = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%d.%m') for day in data['days']]
+    d_m_dates = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%d.%m.%y') for day in data['days']]
     d_of_week = [datetime.strptime(day['date'], '%Y-%m-%d').strftime('%a') for day in data['days']]
-    time_for_lessons = ["08:30 - 10:00", "10:15 - 11:45", "12:00 - 13:30", "14:00 - 15:30", "15:45 - 17:15", "17:30 - 19:00", "19:15 - 20:45"]
-    return d_m_dates, d_of_week, time_for_lessons
-
+    
+    return d_m_dates, d_of_week
 
 # страница создания списка людей и вывод таблицы 
 @app.route("/new_meeting", methods=['GET', 'POST'])
@@ -254,13 +271,14 @@ def format_data(data):
 def new_meeting():
     try:
         if request.method == 'POST':
-            fios = request.form.getlist('name')
-            groups = request.form.getlist('group')
-            departments = request.form.getlist('department')
+            data = request.json
+            fios = data.get('name')
+            groups = data.get('group')
+            departments = data.get('department')
             full_schedule = []
             for fio, group, department in zip(fios, groups, departments):
-                if fio != '': 
-                    if group != '':
+                if fio: 
+                    if group:
                         group_id = get_group_id(group)
                         st_scheedule = make_student_schedule(group_id)
                         full_schedule.append(st_scheedule)
@@ -268,27 +286,67 @@ def new_meeting():
                         teacher_id = get_teacher_id(fio, department)
                         t_schedule = make_teacher_schedule(teacher_id)
                         full_schedule.append(t_schedule)
-                    else:
-                        flash('Введите либо кафедру, либо группу!')
                 else:
-                    flash('Введите значения!')
-            if full_schedule != []:
+                    return jsonify({'error': 'Введите участника либо удалите неиспользуемое поле.'}), 400
+            if data.get('save') and fios:
+                team = add_team(data)
+                if team == 0:
+                    return jsonify({'error': 'Команда с таким названием уже существует.'}), 400
+            if full_schedule:
                 full_schedule.append(make_my_schedule())
                 free = search_free(full_schedule)
-                d_m_date, d_of_week, time_for_lsns = format_data(free)
-                return render_template("choice.html", schedule=free, d_m_date=d_m_date, time_for_lsns=time_for_lsns, d_of_week=d_of_week)
-    except Exception as _ex:
-        print(_ex)
-        flash('Неверно введены данные!')
-    return render_template('new_comand.html')
+                d_m_date, d_of_week = format_data(free)
+                return jsonify({
+                    'schedule': free,
+                    'd_m_date': d_m_date,
+                    'd_of_week': d_of_week,
+                }), 200
+    except Exception as e:
+        print(e)
+        jsonify({'error': 'Проверьте введенные данные. Возможно некоторых участников вы указали неправильно.'}), 400
+    return jsonify({'error': 'Введите все необходимые данные.'}), 405
 
-# БУДУЩАЯ главная страница
+# запись данных о встрече в бд
+@app.route("/choice", methods=['GET', 'POST'])
+@login_required
+def choice():
+    try:
+        if request.method == 'POST':
+            data = request.json
+            print(data)
+            date_from = datetime.strptime(data.get('date'), "%d.%m.%y").date()
+            l_id = Lessons.query.filter_by(time=data.get('time')).first()
+            lesson_id = l_id.lesson_id
+            meeting = Meeting.query.filter_by(date=date_from, lesson_id=lesson_id).first()
+            if meeting:
+                return jsonify({'error': 'Эту дату нельзя выбрать, пожалуйста выберете другую.'})
+            else:
+                meeting = Meeting(theme=data.get('theme'), date=date_from, lesson_id=lesson_id)
+                db.session.add(meeting)
+                db.session.commit()
+                if data.get('type') == 'online':
+                    meet_type = Online(online_id=meeting.meeting_id, link_to_chat=data.get('meet'))
+                else:
+                    meet_type = Offline(offline_id=meeting.meeting_id,place=data.get('meet'))
+                db.session.add(meet_type)
+                db.session.commit()
+                for fio in data.get('names'):
+                    member = Users.query.filter_by(name=fio).first()
+                    m_id = member.id
+                    meet_member = Meeting_members(meeting_id=meeting.meeting_id, user_id=m_id)
+                    db.session.add(meet_member)
+                    db.session.commit()                    
+                return jsonify({'massage': 'Данные успешно записаны'}), 200
+    except Exception as e:
+        print(e)
+        jsonify({'error': 'ААААА'}), 400
+    return jsonify({'error': 'что-то не так'}), 400
+
 @app.route("/main", methods=['GET', 'POST'])
 @login_required
 def main():
     week_number = week_now()
     return jsonify({'week' : week_number})
-    
 
 @manager.user_loader
 def load_user(user_id):
@@ -322,7 +380,8 @@ def login_nstu():
                         add_user(user, "Student")
                 print('auth ' + str(current_user.is_authenticated))
                 return jsonify({'massage': 'Классный пароль!'}), 200
-            except Exception as _ex:
+            except Exception as e:
+                print(e)
                 return jsonify({'error': 'Неверно указаны почта или пароль!'}), 400
         else: 
             return jsonify({'error': 'Нет данных'}), 400
@@ -331,8 +390,14 @@ def login_nstu():
 
 @app.route('/checkAuth', methods=['GET'])
 def check_auth():
-    if current_user.is_authenticated:  # Проверяем, аутентифицирован ли текущий пользователь
-        print('yes!')
+    url_check = 'https://api.ciu.nstu.ru/v1.1/token/show'
+    headers = {
+        'Content-Type': 'application/json;charset=utf-8'
+    }
+    req = requests.get(url_check, headers=headers, cookies=session.get('cookies'))
+    resp = req.json()
+    if resp.get('msg') is None: 
+        print('yes! ')
         return jsonify({'isAuth': True}), 200
     else:
         print('no!')

@@ -38,9 +38,11 @@ class Students(db.Model):
     student_group = db.relationship('Students_groups', backref=db.backref('students', lazy=True))
 
 class Meeting(db.Model):
-    meeting_id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    meeting_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date, default=datetime.now().date, nullable=False)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.lesson_id'))
     theme = db.Column(db.String(128), nullable=False)
+    lesson = db.relationship('Lessons', backref=db.backref('meeting', lazy=True))
 
 class Online(db.Model):
     online_id = db.Column(db.Integer, db.ForeignKey('meeting.meeting_id'), primary_key=True)
@@ -52,22 +54,27 @@ class Offline(db.Model):
     place = db.Column(db.String(64))
     meeting = db.relationship('Meeting', backref=db.backref('offline', uselist=False, lazy=True))
 
-class Comand(db.Model):
-    comand_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(64), default="New comand", nullable=False)
+class Team(db.Model):
+    team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    lead_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    title = db.Column(db.String(64), default="New team", nullable=False)
+    user = db.relationship('Users', backref=db.backref('team', uselist=False, lazy=True))
 
-class Comand_members(db.Model):
-    member_id = db.Column(db.Integer, primary_key=True) 
-    command_id = db.Column(db.Integer, db.ForeignKey('comand.comand_id'))
+class Team_members(db.Model):
+    member_id = db.Column(db.Integer, primary_key=True, autoincrement=True) 
+    team_id = db.Column(db.Integer, db.ForeignKey('team.team_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    command = db.relationship('Comand', backref=db.backref('comand_members', lazy=True))
-    user = db.relationship('Users', backref=db.backref('comand_members', lazy=True))
+    team = db.relationship('Team', backref=db.backref('team_members', lazy=True))
+    user = db.relationship('Users', backref=db.backref('team_members', lazy=True))
 
 class Meeting_members(db.Model):
-    member_id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     meeting_id = db.Column(db.Integer, db.ForeignKey('meeting.meeting_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     meeting = db.relationship('Meeting', backref=db.backref('meeting_members', lazy=True))
     user = db.relationship('Users', backref=db.backref('meeting_members', lazy=True))
 
+class Lessons(db.Model):
+    lesson_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    time = db.Column(db.String(32), nullable=False)
 

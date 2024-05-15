@@ -1,0 +1,88 @@
+.page {
+    margin-top: 50px;
+    margin-left: 50px;
+    margin-bottom: 10px;
+}
+
+.span {
+    font-weight: bold;
+    font-size: 2em;
+    color: rgb(0, 49, 139);
+}
+
+.form {
+    margin: 0 auto;
+    display: block;
+    font-weight: bold;
+}
+
+.form p {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: 700;
+    color: rgb(0, 49, 139);
+}
+
+.form input {
+    background-color: rgb(187, 187, 187);
+    width: auto;
+    margin-right: 15px;
+    height: 1em;
+    padding: 8px;
+    border: 1px solid #415a80;
+    border-radius: 10px;
+    font-size: 14px;
+    color: black;
+}
+
+.form div input {
+    margin-top: 10px;
+}
+
+.form input:focus {
+    outline: none;
+    border-color: #028aaf;
+    color: black;
+}
+
+.or {
+    margin-right: 15px;
+}
+
+.form button {
+    margin-bottom: 15px;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.error {
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 15px;
+    font-weight: 600;
+    text-align: center;
+    color: black;
+    width: 60%;
+    border: 2px solid #da0000;
+    background-color: #cccccc;
+    border-radius: 15px;
+    animation: fadeOut 2s ease forwards;
+    position: relative;
+}
+
+@keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }

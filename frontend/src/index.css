@@ -20,6 +20,7 @@ body {
 }
 
 button {
+  outline: none;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -30,7 +31,7 @@ button {
 }
 
 button:hover {
-  border-color: #646cff;
+  border-color: #c5c6e4;
 }
 
 button:focus,

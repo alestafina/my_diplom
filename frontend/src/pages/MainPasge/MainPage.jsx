@@ -1,41 +1,77 @@
-import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import classes from "./MainPage.module.css"
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import classes from "./MainPage.module.css";
 import Button from "../../components/Button/Button";
 import Nav from "../../components/Nav/Nav";
-import api from "../../api/axiosInstance";
+import Modal from "../../components/Modal/Modal";
+import checkAuth from "../../api/checkAuth";
 
 function MainPage() {
-  const [auth, setAuth] = useState(true);
-
-  useEffect(() => {
-    isAuth();
-  }, []);
-
-  const isAuth = async () => {
-    try {
-      const response = await api.get("/checkAuth");
-      setAuth(response.data.isAuth);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleClick = () => {
     alert("Кнопка нажата!");
   };
 
-  if (!auth) {
+  const handleCreate = () => {
+    setIsModalOpen(true);
+  };
+
+  const additionalButtons = [
+    {
+      text: "С существующей командой",
+      onClick: () => handleCreateMeeting("existing"),
+    },
+    {
+      text: "С новой командой",
+      onClick: () => handleCreateMeeting("new"),
+    },
+    {
+      text: "Отмена",
+      onClick: () => handleModalClose(),
+    },
+  ];
+
+  const handleCreateMeeting = (type) => {
+    if (type === "new") {
+      navigate("/new_meeting");
+    } else {
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  if (!checkAuth()) {
     return <Navigate to="/login" />;
   } else {
     return (
       <>
-        <Nav />
-        <div>Личный кабинет</div>
-        <div>ФИО: {} </div>
-        <Button className={classes.Button} onClick={handleClick} text="Активные встречи" />
-        <Button className={classes.Button} onClick={handleClick} text="Мои команды" />
-        <Button className={classes['Button_create']} onClick={handleClick} text="Создать встречу" />
+        <div className={classes.page}>
+          <div className={classes.lk}>Личный кабинет</div>
+          <div className={classes.fio}>ФИО: {} </div>
+          <Button
+            className={classes.Button}
+            onClick={handleClick}
+            text="Активные встречи"
+          />
+          <Button
+            className={classes.Button}
+            onClick={handleClick}
+            text="Мои команды"
+          />
+          <div className={classes.create}>
+            <Button onClick={handleCreate} text="Создать встречу" />
+          </div>
+          {isModalOpen && (
+            <Modal
+              winName="Создать встречу"
+              additionalButtons={additionalButtons}
+            />
+          )}
+        </div>
       </>
     );
   }
