@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import classes from "./MainPage.module.css";
 import Button from "../../components/Button/Button";
-import Nav from "../../components/Nav/Nav";
 import Modal from "../../components/Modal/Modal";
 import checkAuth from "../../api/checkAuth";
 
 function MainPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [type, setType] = useState("");
   const navigate = useNavigate();
+  useEffect(() => {
+    if (type === "existing" || type === "new") {
+      handleCreateMeeting(type);
+    }
+  }, [type]); 
 
   const handleClick = () => {
     alert("Кнопка нажата!");
@@ -18,14 +23,15 @@ function MainPage() {
     setIsModalOpen(true);
   };
 
+  
   const additionalButtons = [
     {
       text: "С существующей командой",
-      onClick: () => handleCreateMeeting("existing"),
+      onClick: () => setType("existing"),
     },
     {
       text: "С новой командой",
-      onClick: () => handleCreateMeeting("new"),
+      onClick: () => setType("new"),
     },
     {
       text: "Отмена",
@@ -33,12 +39,8 @@ function MainPage() {
     },
   ];
 
-  const handleCreateMeeting = (type) => {
-    if (type === "new") {
-      navigate("/new_meeting");
-    } else {
-    }
-  };
+  const handleCreateMeeting = (type) =>
+    navigate("/new_meeting", { state: { data: type } });
 
   const handleModalClose = () => {
     setIsModalOpen(false);
@@ -67,7 +69,6 @@ function MainPage() {
           </div>
           {isModalOpen && (
             <Modal
-              winName="Создать встречу"
               additionalButtons={additionalButtons}
             />
           )}

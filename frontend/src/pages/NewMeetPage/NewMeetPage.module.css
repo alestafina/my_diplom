@@ -45,10 +45,6 @@
     color: black;
 }
 
-.or {
-    margin-right: 15px;
-}
-
 .form button {
     margin-bottom: 15px;
 }
@@ -59,19 +55,20 @@
 }
 
 .error {
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 20px;
     padding: 15px;
     font-weight: 600;
     text-align: center;
     color: black;
-    width: 60%;
+    width: 20%;
     border: 2px solid #da0000;
     background-color: #cccccc;
     border-radius: 15px;
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999; 
     animation: fadeOut 2s ease forwards;
-    position: relative;
 }
 
 @keyframes fadeOut {

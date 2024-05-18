@@ -1,0 +1,72 @@
+.teamTitleButton button {
+    margin-left: 0px;
+    margin-right: 1px;
+    margin-bottom: 5px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 20%;
+    background-color: rgb(1, 80, 125);
+} 
+
+.teamRollButton button {
+    margin-left: 0px;
+    margin-right: 1px;
+    margin-bottom: 5px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: rgb(0, 80, 125);
+    padding-left: 12px;
+    padding-right: 12px;
+} 
+
+.membersList {
+    list-style: none;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: rgba(0, 80, 125, 0.315);
+    width: 25%;
+    margin-top: -47px;
+    padding-top: -30px;
+    padding-bottom: 20px;
+    border-radius: 15px;
+    border:1px solid  rgb(0, 80, 125);
+}
+
+.membersList li {
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    color: rgb(0, 1, 66);
+    border-bottom: 1px dotted rgb(0, 1, 66);
+}
+
+.error {
+    margin: 20px;
+    padding: 15px;
+    font-weight: 600;
+    text-align: center;
+    color: black;
+    width: 20%;
+    border: 2px solid #da0000;
+    background-color: #cccccc;
+    border-radius: 15px;
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    animation: fadeOut 2s ease forwards;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}

@@ -1,0 +1,15 @@
+.or {
+    margin-right: 15px;
+}
+
+.span {
+    font-weight: bold;
+    font-size: 2em;
+    color: rgb(0, 49, 139);
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+

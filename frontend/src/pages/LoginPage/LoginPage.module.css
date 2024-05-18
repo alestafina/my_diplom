@@ -20,10 +20,10 @@
   border: none;
   margin-top: 20px;
   font-size: 1em;
-  color: #636363;
+  color: #011272;
   background: transparent;
   width: 98%;
-  border-bottom: 2px solid rgb(0, 40, 77);
+  border-bottom: 2px solid rgb(0, 84, 163);
 }
 
 .input:focus {
@@ -45,10 +45,13 @@
 }
 
 @keyframes fadeOut {
-  from {
+  0% {
     opacity: 1;
   }
-  to {
+  90% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
     visibility: hidden;
   }

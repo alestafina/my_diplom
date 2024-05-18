@@ -11,7 +11,6 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/main" element={<><Nav /><MainPage /></>} />
         <Route path="/new_meeting" element={<><Nav /><NewMeetPage /></>} />
-
       </Routes>
     </BrowserRouter>
   );

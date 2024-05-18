@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, flash, session
+from flask import request, session
 from flask_login import login_user, login_required, logout_user, current_user
 import requests
 import datetime as dt
@@ -17,16 +17,14 @@ def add_user(Users, role):
     return session
 
 # если юзера нет в бд, добавляем, выхватывая данные из ИС
-def user_to_db(headers):
+def user_to_db(headers, email):
     try:
         url_st_info = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_info'
         req = requests.get(url_st_info, headers=headers, cookies=session.get('cookies'))
         json_response = req.json()
         information = json_response[0]
         username = information['SURNAME'] + ' ' + information['NAME'] + ' ' + information['PATRONYMIC']
-        email = information['EMAIL']
         role = ""
-        # добавление в таблицу юзерс
         new_user = Users(id = information['ID'], name=username, corp_email=email)
         if information['ROLE'] == 0: 
             role = "Student"
@@ -35,7 +33,6 @@ def user_to_db(headers):
         db.session.add(new_user)
         db.session.commit()
         new_user = Users.query.filter_by(corp_email=email).first()
-        # добавление в таблицы преподов или студентов в зависимости от роли
         if role == "Student":
             group = Students_groups.query.filter_by(group_id=information['ID_GROUP']).first()
             if group == None:
@@ -198,13 +195,17 @@ def make_student_schedule(group_id):
                 weeks = [int(num) for num in item['WEEK'].split(",")]
             if item['DAY_NUMBER'] == day_week:
                 if item['WEEK'] == None:
-                    if item['FREQUENCY'] == 1 and cur_week_num % 2 == 0: # четная неделя
-                        lessons[f"lesson {item['POSITION']}"] = 0  
-                    elif item['FREQUENCY'] == 2 and cur_week_num % 2 != 0: # нечетная неделя
-                        lessons[f"lesson {item['POSITION']}"] = 0 
-                    elif item['FREQUENCY'] == 3: # любая неделя
+                    # четная неделя
+                    if item['FREQUENCY'] == 1 and cur_week_num % 2 == 0: 
                         lessons[f"lesson {item['POSITION']}"] = 0
-                elif cur_week_num in weeks: # FREQUENCY=7, особые номера недель
+                    # нечетная неделя
+                    elif item['FREQUENCY'] == 2 and cur_week_num % 2 != 0: 
+                        lessons[f"lesson {item['POSITION']}"] = 0 
+                    # любая неделя
+                    elif item['FREQUENCY'] == 3: 
+                        lessons[f"lesson {item['POSITION']}"] = 0
+                # FREQUENCY=7, особые номера недель
+                elif cur_week_num in weeks: 
                     lessons[f"lesson {item['POSITION']}"] = 0  
         result["days"].append({"date": date_str, f"day {i}": lessons})     
         # Если суббота, пропускаем воскресенье, меняем номер текущей недели
@@ -224,6 +225,34 @@ def week_now():
     req = requests.get(week_api, cookies=session.get('cookies'), headers=headers)
     response = req.json()
     return response[0]["WEEK"]
+
+# обнуляем окна, соотевствующие уже существующим встречам (берем из бд)
+def make_meeting_schedule(schedule):
+    result = schedule
+    member = db.session.query(Meeting_members).filter_by(user_id=session['id']).all()
+    for i in member:
+        meeting = Meeting.query.filter_by(meeting_id=i.meeting_id).first()
+        for day in range(1,13):
+            if result["days"][day - 1]["date"] == meeting.date.strftime('%Y-%m-%d'):
+                result["days"][day - 1][f"day {day}"][f"lesson {meeting.lesson_id}"] = 0 
+    return result
+
+def remove_time_with_meet(fio, role, _id, schedule):
+    try:
+        if role == 'student':
+            student = Students.query.join(Users).filter(
+                Users.name == fio, Users.id == Students.student_id, Students.group_id == _id).first()
+            user_id = student.student_id 
+        else: 
+            user_id = _id
+        member = db.session.query(Meeting_members).filter_by(user_id=user_id).all()
+        for idf in member:
+            meeting = Meeting.query.filter_by(meeting_id=idf.meeting_id).first()
+            for day in range(1,13):
+                if schedule["days"][day - 1]["date"] == meeting.date.strftime('%Y-%m-%d'):
+                    schedule["days"][day - 1][f"day {day}"][f"lesson {meeting.lesson_id}"] = 0 
+    except Exception as _ex:
+        print(_ex)
 
 # ищем свободные окна для всех
 def search_free(schedule):
@@ -248,14 +277,24 @@ def add_team(data):
             team = Team(title=data.get('title'), lead_user_id=session['id'])
             db.session.add(team)
             db.session.commit()
-            for fio in data.get('name'):
-                member = Users.query.filter_by(name=fio).first()
-                team_member = Team_members(team_id=team.team_id, user_id=member.id)
-                db.session.add(team_member)
-            db.session.commit()
             return team.team_id
     except Exception as _ex:
-        return _ex
+        print(_ex)
+
+def add_team_member(fio, role, _id, title):
+    try:
+        if role == 'student':
+            team = Team.query.filter_by(title=title, lead_user_id=session['id']).first()
+            student = Students.query.join(Users).filter(
+                Users.name == fio, Users.id == Students.student_id, Students.group_id == _id).first()
+            team_member = Team_members(team_id=team.team_id, user_id=student.student_id)
+        else: 
+            team = Team.query.filter_by(title=title, lead_user_id=session['id']).first()
+            team_member = Team_members(team_id=team.team_id, user_id=_id)
+        db.session.add(team_member)
+        db.session.commit()
+    except Exception as _ex:
+        print(_ex)
 
 # форматированные даты и часы пар для вывода в таблице
 def format_data(data):
@@ -265,7 +304,40 @@ def format_data(data):
     
     return d_m_dates, d_of_week
 
-# страница создания списка людей и вывод таблицы 
+@app.route("/teams", methods=['GET', 'POST'])
+@login_required
+def teams():
+    try:
+        teams = db.session.query(Team).filter_by(lead_user_id=session['id']).all()
+        if teams == []:
+            return jsonify({'massage': 'Вы пока не создали ни одной команды.'})
+        else: 
+            teams_list = []
+            for team in teams:
+                title = team.title
+                members = db.session.query(Team_members).filter_by(team_id=team.team_id).all()
+                team_members = []
+                for member in members:
+                    user = Users.query.filter_by(id=member.user_id).first()
+                    student = Students.query.filter_by(student_id=member.user_id).first()
+                    if student:
+                        group = Students_groups.query.filter_by(group_id=student.group_id).first()
+                        group_name = group.name
+                        member = {'name': user.name, 'group': group_name, 'dep': ''}
+                    else:
+                        teacher = Teachers.query.filter_by(teacher_id=member.user_id).first()
+                        dep = Departments.query.filter_by(department_id=teacher.department_id).first()
+                        dep_name = dep.short_name
+                        member = {'name': user.name, 'group': '', 'dep': dep_name}
+                    team_members.append(member)
+                teams_list.append({'title': title, 'members': team_members})
+            return jsonify(teams_list)
+    except Exception as e:
+        print(e)
+        jsonify({'error': '123'}), 400
+        
+
+# создание списка людей и вывод таблицы 
 @app.route("/new_meeting", methods=['GET', 'POST'])
 @login_required
 def new_meeting():
@@ -275,36 +347,47 @@ def new_meeting():
             fios = data.get('name')
             groups = data.get('group')
             departments = data.get('department')
-            full_schedule = []
-            for fio, group, department in zip(fios, groups, departments):
-                if fio: 
-                    if group:
-                        group_id = get_group_id(group)
-                        st_scheedule = make_student_schedule(group_id)
-                        full_schedule.append(st_scheedule)
-                    elif department != '':
-                        teacher_id = get_teacher_id(fio, department)
-                        t_schedule = make_teacher_schedule(teacher_id)
-                        full_schedule.append(t_schedule)
-                else:
-                    return jsonify({'error': 'Введите участника либо удалите неиспользуемое поле.'}), 400
             if data.get('save') and fios:
                 team = add_team(data)
                 if team == 0:
                     return jsonify({'error': 'Команда с таким названием уже существует.'}), 400
+            full_schedule = []
+            print(data)
+            for fio, group, department in zip(fios, groups, departments):
+                if fio != session['name']: 
+                    if group:
+                        group_id = get_group_id(group)
+                        print('OK')
+                        if data.get('save'):
+                            add_team_member(fio, 'student', group_id, data.get('title'))
+                        st_schedule = make_student_schedule(group_id)
+                        remove_time_with_meet(fio, 'student', group_id, st_schedule)
+                        full_schedule.append(st_schedule)
+                    elif department != '':
+                        teacher_id = get_teacher_id(fio, department)
+                        if data.get('save'):
+                            add_team_member(fio, 'teacher', teacher_id, data.get('title'))
+                        t_schedule = make_teacher_schedule(teacher_id)
+                        remove_time_with_meet(fio, 'teacher', group_id, t_schedule)
+                        full_schedule.append(t_schedule)
+                elif fio == session['name']:
+                    return jsonify({'error': 'Свои данные вводить не нужно.'}), 400
+                else:
+                    return jsonify({'error': 'Введите участника либо удалите неиспользуемое поле.'}), 400
             if full_schedule:
                 full_schedule.append(make_my_schedule())
                 free = search_free(full_schedule)
                 d_m_date, d_of_week = format_data(free)
+                final = make_meeting_schedule(free)
                 return jsonify({
-                    'schedule': free,
+                    'schedule': final,
                     'd_m_date': d_m_date,
                     'd_of_week': d_of_week,
                 }), 200
     except Exception as e:
         print(e)
-        jsonify({'error': 'Проверьте введенные данные. Возможно некоторых участников вы указали неправильно.'}), 400
-    return jsonify({'error': 'Введите все необходимые данные.'}), 405
+        jsonify({'error': 'Проверьте введенные данные. Возможно, некоторых участников вы указали неправильно.'}), 400
+    return jsonify({'error': 'Необходим хотя бы один участник.'}), 405
 
 # запись данных о встрече в бд
 @app.route("/choice", methods=['GET', 'POST'])
@@ -313,7 +396,6 @@ def choice():
     try:
         if request.method == 'POST':
             data = request.json
-            print(data)
             date_from = datetime.strptime(data.get('date'), "%d.%m.%y").date()
             l_id = Lessons.query.filter_by(time=data.get('time')).first()
             lesson_id = l_id.lesson_id
@@ -335,12 +417,15 @@ def choice():
                     m_id = member.id
                     meet_member = Meeting_members(meeting_id=meeting.meeting_id, user_id=m_id)
                     db.session.add(meet_member)
-                    db.session.commit()                    
+                    db.session.commit()
+                meet_member = Meeting_members(meeting_id=meeting.meeting_id, user_id=session['id'])
+                db.session.add(meet_member)
+                db.session.commit()
                 return jsonify({'massage': 'Данные успешно записаны'}), 200
     except Exception as e:
         print(e)
-        jsonify({'error': 'ААААА'}), 400
-    return jsonify({'error': 'что-то не так'}), 400
+        jsonify({'error': 'Что-то пошло не так.'}), 400
+    return jsonify({'error': 'Ошибка при отправке данных.'}), 400
 
 @app.route("/main", methods=['GET', 'POST'])
 @login_required
@@ -372,7 +457,7 @@ def login_nstu():
                 if req.status_code == 200 and req.json()['login']:
                     user = Users.query.filter_by(corp_email=email).first()
                     if user == None:
-                        user = user_to_db(headers)
+                        user = user_to_db(headers, email)
                     login_user(user)
                     if Teachers.query.filter_by(teacher_id=user.id).first() != None:
                         add_user(user, "Teacher")
