@@ -4,49 +4,19 @@
     margin-bottom: 10px;
 }
 
-.span {
+.title {
     font-weight: bold;
     font-size: 2em;
     color: rgb(0, 49, 139);
 }
 
-.form {
-    margin: 0 auto;
-    display: block;
-    font-weight: bold;
+.span button {
+    background-color: rgb(187, 10, 10);
+    border-radius: 15px;
 }
 
-.form p {
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-weight: 700;
-    color: rgb(0, 49, 139);
-}
-
-.form input {
-    background-color: rgb(187, 187, 187);
-    width: auto;
-    margin-right: 15px;
-    height: 1em;
-    padding: 8px;
-    border: 1px solid #415a80;
-    border-radius: 10px;
-    font-size: 14px;
-    color: black;
-}
-
-.form div input {
-    margin-top: 10px;
-}
-
-.form input:focus {
-    outline: none;
-    border-color: #028aaf;
-    color: black;
-}
-
-.form button {
-    margin-bottom: 15px;
+.span button:hover {
+    background-color: rgb(175, 0, 0);
 }
 
 .disabled {

@@ -9,9 +9,26 @@
 }
 
 .fio {
-    font-size: 1em;
-    font-weight: 500;
+    font-size: 14pt;
+    font-weight: 700;
     color: rgb(0, 49, 139);
+}
+
+.fio span {
+    color: rgb(0, 101, 160);
+    font-weight: 600;
+    padding: 10px;
+}
+
+.mail {
+    font-size: 14pt;
+    font-weight: 700;
+    color: rgb(0, 49, 139);
+}
+
+.mail span {
+    color: rgb(0, 101, 160);
+    font-weight: 600;
 }
 
 .page {

@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_mail import Mail, Massage
 from config import Config
 from flask_cors import CORS
 
@@ -12,5 +13,6 @@ db = SQLAlchemy(app) # подключаем бд
 migrate = Migrate(app, db) # создаем миграции бд
 manager = LoginManager() # создаем менеджер логинов 
 manager.init_app(app) # обеспечиваем связь менеджера с нашим приложением (входы/выходы app)
+mail = Mail(app)
 
 from Meeting import models, routes

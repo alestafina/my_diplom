@@ -1,6 +1,6 @@
 import requests
 import json
-import datetime
+import datetime as dt
 
 login = 'mustafina.2020@stud.nstu.ru'
 password = 'Astro24105804'
@@ -21,9 +21,6 @@ def auth():
     print(req)
     return _cookies
 
-
-
-
 # формируем объект с расписанием преподавателя
 def make_teacher_schedule(teacher_id):
     # получаем расписание преподавателя
@@ -32,12 +29,12 @@ def make_teacher_schedule(teacher_id):
     data = req.json()
     # формируем формат для будущего поиска
     result = {"name": data[0]["TEACHER_FIO"], "days": []}
-    date = datetime.datetime.today()
+    date = dt.datetime.today()
     # Если сегодня суббота, пропускаем воскресенье
     if date.weekday() == 5:
-        date += datetime.timedelta(days=2)
+        date += dt.timedelta(days=2)
     else:
-        date += datetime.timedelta(days=1)
+        date += dt.timedelta(days=1)
     # 12 дней (2 недели без воскресений)
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
@@ -49,9 +46,9 @@ def make_teacher_schedule(teacher_id):
         result["days"].append({"date": date_str, f"day {i}": lessons})
         # Если суббота, пропускаем воскресенье
         if date.weekday() == 5:
-            date += datetime.timedelta(days=2)
+            date += dt.timedelta(days=2)
         else:
-            date += datetime.timedelta(days=1)
+            date += dt.timedelta(days=1)
     return result
 
 # формируем объект с расписанием студента
@@ -68,13 +65,13 @@ def make_student_schedule(student_id):
     req = requests.get(week_api, cookies=cookies, headers=headers)
     response = req.json()
     cur_week_num = response[0]["WEEK"]
-    date = datetime.datetime.today()
+    date = dt.datetime.today()
     # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
     if date.weekday() == 5:
-        date += datetime.timedelta(days=2)
+        date += dt.timedelta(days=2)
         cur_week_num += 1
     else:
-        date += datetime.timedelta(days=1)    
+        date += dt.timedelta(days=1)    
     for i in range(1, 13):
         lessons = {f"lesson {j}": 1 for j in range(1, 8)}
         date_str = date.isoformat().split("T")[0]
@@ -95,10 +92,10 @@ def make_student_schedule(student_id):
         result["days"].append({"date": date_str, f"day {i}": lessons})     
         # Если суббота, пропускаем воскресенье, меняем номер текущей недели
         if date.weekday() == 5:
-            date += datetime.timedelta(days=2)
+            date += dt.timedelta(days=2)
             cur_week_num += 1
         else:
-            date += datetime.timedelta(days=1)
+            date += dt.timedelta(days=1)
     return result
 
 # ДА ВОЗМОЖНО ЭТО ГРОМОЗДКО И КАЖЕТСЯ ЧТО У МЕНЯ ОЧЕНЬ ТУПАЯ СТРУКТУРА В ЛОБ
@@ -131,3 +128,19 @@ free = search_free(schedule)
 
 with open("free.json", "w") as out:
     json.dump(free, out, indent=4, ensure_ascii=False)
+
+# def dates():
+#     date = dt.datetime.today()
+#     dates = []
+#     # Если сегодня суббота, пропускаем воскресенье, меняем номер текущей недели
+#     for i in range(0,12):
+#         if date.weekday() == 5:
+#             date += dt.timedelta(days=2)
+#         else:
+#             date += dt.timedelta(days=1)
+#         date_str = date.isoformat().split("T")[0]
+#         dates.append(date_str)
+#     print(dates)
+#     return dates
+
+# dates()

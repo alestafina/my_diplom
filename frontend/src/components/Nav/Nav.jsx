@@ -38,16 +38,16 @@ function Nav() {
           MEETING
         </div>
       </li>
-          <li className={classes.li}>
-            <a href="#">Активные встречи</a>
-          </li>
-          <li className={classes.li}>
-            <a href="#">Мои команды</a>
-          </li>
-          <li className={classes.li}>
-            <a href="#">Личный кабинет</a>
-          </li>
-          <li className={classes.li}>
+      <li className={classes.li}>
+          <Button onClick={() => navigate("/active_meetings")} text="Активные встречи" />
+        </li>
+        <li className={classes.li}>
+          <Button onClick={() => navigate("/my_teams")} text="Мои команды" />
+        </li>
+        <li className={classes.li}>
+          <Button onClick={() => navigate("/main")} text="Личный кабинет" />
+        </li>
+          <li className={classes.exit}>
             <Button onClick={handleLogout} text="Выход" />
           </li>
           <p className={classes.p}> {week} учебная неделя </p>

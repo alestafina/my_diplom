@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DeleteButton from "../DeleteButton";
 import Button from "../Button/Button";
 import classes from "./Participants.module.css";
@@ -7,7 +7,7 @@ const ParticipantInputs = ({ onChange }) => {
   const [participants, setParticipants] = useState([{ id: 0, name: "" }]);
   const [groupValues, setGroupValues] = useState([""]);
   const [depValues, setDepValues] = useState([""]);
-
+  
   const addFields = (e) => {
     e.preventDefault();
     const newParticipant = { id: participants.length, name: "" };

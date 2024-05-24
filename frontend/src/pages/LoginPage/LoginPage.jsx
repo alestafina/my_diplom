@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosInstance";
 import Button from "../../components/Button/Button";
 import classes from "./LoginPage.module.css";
+import Loader from "../../components/Loader/Loader";
 
 function LoginPage() {
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,6 +28,7 @@ function LoginPage() {
       return; 
     }
     try {
+      setLoading(true);
       const response = await api.post("/login", { email, password });
       console.log("Успешная аутентификация:", response.data);
       navigate("/main");
@@ -33,11 +36,14 @@ function LoginPage() {
       console.error("Ошибка аутентификации:", error);
       setError("Пожалуйста, проверьте логин и пароль.");
       setTimeout(() => setError(""), 8000);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <section className={classes.container}>
+      {loading && <Loader />}
       <h2 className={classes.container}>Авторизация</h2>
       <form className={classes.form} onSubmit={handleSubmit}>
         <div>
