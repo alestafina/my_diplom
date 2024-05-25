@@ -6,6 +6,7 @@ click==8.1.7
 flask==3.0.2
 Flask-Cors==4.0.0
 Flask-Login==0.6.3
+flask-mail==0.10.0
 Flask-Migrate==4.0.7
 flask-sqlalchemy==3.1.1
 flask-wtf==1.2.1

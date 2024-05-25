@@ -1,12 +1,12 @@
 from flask import request, session
 from flask_login import login_user, login_required, logout_user
-from flask_mail import Mail, Massage
+from flask_mail import Message
 import requests
 import datetime as dt
 import locale
 from flask import jsonify
 
-from Meeting import app, db, manager
+from Meeting import app, db, manager, mail
 from Meeting.models import *
 
 # добавляем нужную информацию о юзере в сессию
@@ -317,7 +317,6 @@ def get_meeting_data(date, time):
         members = db.session.query(Meeting_members).filter_by(meeting_id=meeting.meeting_id).all()
         members_names = [db.session.query(Users).filter_by(id=member.user_id).first().name for member in members]
         data = {'type': meeting_type, 'meet': meet, 'theme': theme, 'members': members_names}
-        print(data)
         return data
     else: 
         return 0
@@ -397,7 +396,10 @@ def delete_meet():
             Meeting_members.user_id == session['id']
             ).first()
         members = db.session.query(Meeting_members).filter_by(meeting_id=meeting.meeting_id).all()
+        emails = []
         for member in members:
+            email = db.session.query(Users).filter_by(id=member.user_id).first().corp_email
+            emails.append(email)
             db.session.delete(member)
         db.session.commit()
         if data.get('type') == 'Очная':
@@ -409,6 +411,22 @@ def delete_meet():
         db.session.commit()
         db.session.delete(meeting)
         db.session.commit()
+        if session['role'] == 'Teacher':
+                lead_info = db.session.query(Departments).join(Teachers).filter(Teachers.teacher_id == session['id']).first().short_name
+        else:
+            lead_info = db.session.query(Students_groups).join(Students).filter(Students.student_id == session['id']).first().name
+        print('Отправка сообщения')
+        yr, mnth, day = data.get('date').split('-')
+        msg_body = (
+            f'Cовещание, посвященное теме "{data.get("theme")}", которое должно было проходить '
+            f'{day}.{mnth}.{yr}, в {data.get("time").split("-")[0]} ОТМЕНЕНО.\n'
+            f'Совещание отменил(а) {session["name"]} | {lead_info}.'
+        )
+        msg_theme = 'Совещание отменено'
+        msg = Message(msg_theme, recipients=emails, body=msg_body)
+        mail.send(msg)
+        
+        print('Сообщение отправлено')
         return jsonify({'massage': 'Встреча успешно удалена.'}), 200
     except Exception as e:
         print(e)
@@ -548,16 +566,36 @@ def choice():
                 meet_type = Offline(offline_id=meeting.meeting_id,place=data.get('meet'))
             db.session.add(meet_type)
             db.session.commit()
+            emails = []
             for fio in data.get('names'):
                 member = Users.query.filter_by(name=fio).first()
+                email = member.corp_email
+                emails.append(email)
                 m_id = member.id
                 meet_member = Meeting_members(meeting_id=meeting.meeting_id, user_id=m_id)
                 db.session.add(meet_member)
                 db.session.commit()
             meet_member = Meeting_members(meeting_id=meeting.meeting_id, user_id=session['id'])
+            emails.append(session['email'])
             db.session.add(meet_member)
             db.session.commit()
-            return jsonify({'massage': 'Данные успешно записаны'}), 200
+            if session['role'] == 'Teacher':
+                lead_info = db.session.query(Departments).join(Teachers).filter(Teachers.teacher_id == session['id']).first().short_name
+            else:
+                lead_info = db.session.query(Students_groups).join(Students).filter(Students.student_id == session['id']).first().name
+            print('Отправка сообщения')
+            msg_body = (
+                f'Вы приглашены на совещание, посвященное теме "{data.get("theme")}".\n'
+                f'Оно пройдет {data.get("date")}, в {data.get("time").split("-")[0]}в '
+                f'{"очном" if data.get("type") != "Очная" else "онлайн"} формате '
+                f'{"в аудитории " + data.get("meet") if data.get("type") != "Очная" else "по ссылке " + data.get("meet")}.\n'
+                f'Совещание назначил(а) {session["name"]} | {lead_info}.'
+            )
+            msg_theme = 'Назначено совещание'
+            msg = Message(msg_theme, recipients=emails, body=msg_body)
+            mail.send(msg)
+            print('Сообщение отправлено')
+            return jsonify({'message': 'Данные успешно записаны'}), 200
     except Exception as e:
         print(e)
         jsonify({'error': 'Что-то пошло не так.'}), 400
@@ -610,7 +648,7 @@ def login_nstu():
         else: 
             return jsonify({'error': 'Нет данных'}), 400
     else:
-        return jsonify({'massage': 'страница логина'})
+        return jsonify({'message': 'страница логина'})
 
 @app.route('/checkAuth', methods=['GET'])
 def check_auth():
@@ -633,4 +671,4 @@ def check_auth():
 def logout():
     session.pop('cookies', None)
     logout_user()
-    return ({'massage': 'Успешный выход.'})
+    return ({'message': 'Успешный выход.'})
