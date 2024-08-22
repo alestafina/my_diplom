@@ -8,7 +8,7 @@ from config import Config
 
 app = Flask(__name__) # инициализируем приложение
 app.config.from_object(Config) # вписываем наши ланные конфигурации
-CORS(app, supports_credentials=True) # разрешаем серверу отправлять данные, куки на фронт
+CORS(app, supports_credentials=True, origins="http://217.71.129.139") # разрешаем серверу отправлять данные, куки на фронт
 
 db = SQLAlchemy(app) # подключаем бд
 migrate = Migrate(app, db) # создаем миграции бд

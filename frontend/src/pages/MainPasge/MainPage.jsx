@@ -31,7 +31,7 @@ function MainPage() {
 
   const getData = async () => {
     try {setLoad(true);
-    const data = await api.get("/main");
+    const data = await api.get("/api/main");
     setName(data.data.name);
     setEmail(data.data.corp_mail);} catch(error) {
       console.log(error);

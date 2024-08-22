@@ -23,7 +23,7 @@ function MyTeamsPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await api.get("/teams");
+        const response = await api.get("/api/teams");
         setTeams(response.data);
       } catch (error) {
         setError("Ошибка при получении команд.");
@@ -40,7 +40,7 @@ function MyTeamsPage() {
 
   const handleDelete = async () => {
     try {
-      await api.post("/teams/delete", { title: selectedTeam.title });
+      await api.post("/api/teams/delete", { title: selectedTeam.title });
       setTeams((prevTeams) => prevTeams.filter((team) => team.title !== selectedTeam.title));
         setSelectedTeam({ members: [""], title: "" });
         setIsModalOpen(false);

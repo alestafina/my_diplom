@@ -14,7 +14,7 @@ function Nav() {
 
   const weekNumber = async () => {
     try {
-      const response = await api.get("/main");
+      const response = await api.get("/api/main");
       setWeek(response.data.week)
     } catch(error) {
       console.log(error)
@@ -23,7 +23,7 @@ function Nav() {
 
   const handleLogout = async () => {
     try {
-      const response = await api.post("/logout");
+      const response = await api.post("/api/logout");
       console.log(response.data);
       navigate("/login");
     } catch (error) {

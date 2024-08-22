@@ -11,7 +11,7 @@ function checkAuth() {
 
   const isAuth = async () => {
     try {
-      const response = await api.get("/checkAuth");
+      const response = await api.get("/api/checkAuth");
       setAuth(response.data.isAuth);
     } catch (error) {
       console.error(error);

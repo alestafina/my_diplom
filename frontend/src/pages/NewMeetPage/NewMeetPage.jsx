@@ -101,7 +101,7 @@ function NewMeetPage() {
     } else {
       try {
         setLoading(true);
-        const result = await api.post("/new_meeting", data);
+        const result = await api.post("/api/new_meeting", data);
         console.log("Данные успешно отправлены:", result);
         setTimeTable(result.data);
         setBack(true);
@@ -143,7 +143,7 @@ function NewMeetPage() {
       setTimeout(() => setError(""), 5000);
     } else {
       try {
-        const result = await api.post("/choice", data);
+        const result = await api.post("/api/choice", data);
         console.log("Данные успешно отправлены:", result.data);
         navigate("/main");
       } catch (error) {

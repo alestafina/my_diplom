@@ -17,7 +17,7 @@ const ExistTeam = ({ onSelectTeam, onExist }) => {
     const fetchTeams = async () => {
       setLoading(true);
       try {
-        const response = await api.get("/teams");
+        const response = await api.get("/api/teams");
         if (!response.data.massage) {
           setExist(true);
           setTeams(response.data);

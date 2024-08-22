@@ -36,7 +36,7 @@ function ActiveMeetPage() {
     const getData = async () => {
       try {
         setLoading(true);
-        const data = await api.get("/active_meet");
+        const data = await api.get("/api/active_meet");
         console.log(data);
         setTimeTable(data.data);
       } catch (error) {
@@ -86,7 +86,7 @@ function ActiveMeetPage() {
     const { date, time } = timeIdate;
     const { type, theme } = selectedMeeting;
     try {
-      const response = await api.post("/delete_meet", {
+      const response = await api.post("/api/delete_meet", {
         date,
         time,
         type,

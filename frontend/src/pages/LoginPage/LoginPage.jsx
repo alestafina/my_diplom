@@ -29,7 +29,7 @@ function LoginPage() {
     }
     try {
       setLoading(true);
-      const response = await api.post("/login", { email, password });
+      const response = await api.post("/api/login", { email, password });
       console.log("Успешная аутентификация:", response.data);
       navigate("/main");
     } catch (error) {

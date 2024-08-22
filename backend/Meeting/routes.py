@@ -1,10 +1,9 @@
-from flask import request, session
+from flask import request, session, make_response, jsonify
 from flask_login import login_user, login_required, logout_user
 from flask_mail import Message
 import requests
 import datetime as dt
 import locale
-from flask import jsonify
 
 from Meeting import app, db, manager, mail
 from Meeting.models import *
@@ -74,7 +73,6 @@ def make_my_schedule():
 
 # получаем айди преподавателя из бд или ИС если такого нет
 def get_teacher_id(_fio, _department):
-    # большой запрос на поиск препода
     t_id_query = db.session.query(
     Teachers.teacher_id).join(
     Departments, Teachers.department_id == Departments.department_id).join(
@@ -341,7 +339,7 @@ def format_data():
     d_of_week = [datetime.strptime(day, '%Y-%m-%d').strftime('%a') for day in date] 
     return d_m_dates, d_of_week
 
-@app.route("/active_meet", methods=['GET', 'POST'])
+@app.route("/api/active_meet", methods=['GET', 'POST'])
 @login_required
 def active_meet():
     if request.method =='GET':
@@ -384,7 +382,7 @@ def active_meet():
             print(e)
             return jsonify({'error': 'Произошла ошибка.'}), 400
 
-@app.route("/delete_meet", methods=['GET', 'POST'])
+@app.route("/api/delete_meet", methods=['GET', 'POST'])
 @login_required
 def delete_meet():
     try:
@@ -432,7 +430,7 @@ def delete_meet():
         print(e)
         return jsonify({'error': str(e)}), 500
 
-@app.route("/teams", methods=['GET', 'POST'])
+@app.route("/api/teams", methods=['GET', 'POST'])
 @login_required
 def teams():
     try:
@@ -464,7 +462,7 @@ def teams():
         print(e)
         jsonify({'error': 'Возникла ошибка при поиске команд.'}), 400
 
-@app.route("/teams/delete", methods=['GET', 'POST'])
+@app.route("/api/teams/delete", methods=['GET', 'POST'])
 @login_required
 def team_delete():
     try:
@@ -483,7 +481,7 @@ def team_delete():
     return jsonify({'error': 'Что-то пошло не так.'})
 
 # создание списка людей и вывод таблицы 
-@app.route("/new_meeting", methods=['GET', 'POST'])
+@app.route("/api/new_meeting", methods=['GET', 'POST'])
 @login_required
 def new_meeting():
     try:
@@ -493,6 +491,10 @@ def new_meeting():
             groups = data.get('group')
             departments = data.get('department')
             full_schedule = []
+            for fio in fios:
+                member = Users.query.filter_by(name=fio).first()
+                if member.id == None:
+                    return jsonify({'error': f'Невозможно добавить к совещанию: {fio}, пожалуйста вернитесь и уберите участника.'})
             for fio, group, department in zip(fios, groups, departments):
                 if fio != session['name']: 
                     if group != '':
@@ -542,7 +544,7 @@ def new_meeting():
         return jsonify({'error': 'Проверьте введенные данные. Возможно, некоторых участников вы указали неправильно.'}), 400
 
 # запись данных о встрече в бд
-@app.route("/choice", methods=['GET', 'POST'])
+@app.route("/api/choice", methods=['GET', 'POST'])
 @login_required
 def choice():
     try:
@@ -601,7 +603,7 @@ def choice():
         jsonify({'error': 'Что-то пошло не так.'}), 400
     return jsonify({'error': 'Ошибка при отправке данных.'}), 400
 
-@app.route("/main", methods=['GET', 'POST'])
+@app.route("/api/main", methods=['GET', 'POST'])
 @login_required
 def main():
     week_number = week_now()
@@ -614,7 +616,7 @@ def load_user(user_id):
     return Users.query.get(user_id)
 
 # Авторизация НГТУ
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/api/login", methods=['GET', 'POST'])
 def login_nstu():
     if request.method == 'POST':
         data = request.json
@@ -629,6 +631,7 @@ def login_nstu():
             }
             req = requests.get(url_auth, headers=headers)
             session['cookies'] = dict(req.cookies)
+            print(session['cookies'])
             try:
                 if req.json()['login']:
                     user = Users.query.filter_by(corp_email=email).first()
@@ -639,7 +642,7 @@ def login_nstu():
                         add_user(user, "Teacher")
                     else:
                         add_user(user, "Student")
-                    return jsonify({'massage': 'Авторизация прошла успешно.'}), 200
+                    return jsonify({'message': 'Login successful'}), 200
                 else:
                     raise Exception (req.json()['msg'])
             except Exception as e:
@@ -650,7 +653,7 @@ def login_nstu():
     else:
         return jsonify({'message': 'страница логина'})
 
-@app.route('/checkAuth', methods=['GET'])
+@app.route('/api/checkAuth', methods=['GET'])
 def check_auth():
     url_check = 'https://api.ciu.nstu.ru/v1.1/token/show'
     headers = {
@@ -666,7 +669,7 @@ def check_auth():
         return jsonify({'isAuth': False}), 200
 
 
-@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/api/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     session.pop('cookies', None)
