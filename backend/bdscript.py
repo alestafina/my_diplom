@@ -5,9 +5,6 @@ import psycopg2
 from Meeting import db, app
 from Meeting.models import *
 
-# login = 'mustafina.2020@stud.nstu.ru'
-# password = 'Astro24105804'
-# apikey = 'FB8EEED25F6150E3E0530718000A3425'
 
 # url_auth = 'https://api.ciu.nstu.ru/v1.1/token/auth'
 
