@@ -85,7 +85,7 @@ def get_teacher_id(_fio, _department):
         url_get_teachers = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/teachers'
         headers = {
             'Content-Type': 'application/json;charset=utf-8',
-            'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+            'X-Apikey': 'APIKEY' # здесь был ключ, но его оставить не могу
         }
         req = requests.get(url_get_teachers, cookies=session.get('cookies'), headers=headers)
         data = req.json()
@@ -117,7 +117,7 @@ def get_group_id(group):
         url_get_groups = 'https://api.ciu.nstu.ru/v1.1/student/get_data/proj/groups'
         headers = {
             'Content-Type': 'application/json;charset=utf-8',
-            'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+            'X-Apikey': 'APIKEY' # здесь был ключ, но его оставить нельзя
         }
         req = requests.get(url_get_groups, cookies=session.get('cookies'), headers=headers)
         data = req.json()
@@ -134,7 +134,7 @@ def get_group_id(group):
 def make_teacher_schedule(teacher_id):
     headers = {
         'Content-Type': 'application/json;charset=utf-8',
-        'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+        'X-Apikey': 'APIKEY' # здесь был ключ, но его оставить нельзя
     }
     # получаем расписание преподавателя
     url_get_teacher = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_teacher_schedule/{teacher_id}'
@@ -167,7 +167,7 @@ def make_teacher_schedule(teacher_id):
 def make_student_schedule(group_id):
     headers = {
         'Content-Type': 'application/json;charset=utf-8',
-        'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+        'X-Apikey': 'APIKEY' # здесь был ключ, но его оставить нельзя
     }
     # получаем расписание студента
     url_get_student = f'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_student_schedule/{group_id}'
@@ -218,7 +218,7 @@ def make_student_schedule(group_id):
 def week_now():
     headers = {
         'Content-Type': 'application/json;charset=utf-8',
-        'X-Apikey': 'FB8EEED25F6150E3E0530718000A3425'
+        'X-Apikey': 'APIKEY' # здесь был ключ, но его оставить не могу
     }
     week_api = 'https://api.ciu.nstu.ru/v1.1/student/get_data/app/get_week_number'
     req = requests.get(week_api, cookies=session.get('cookies'), headers=headers)
